@@ -1,33 +1,80 @@
-import { Header } from '@/components/Header';
-import { ReportForm } from '@/components/ReportForm';
-import { WaveBackground } from '@/components/WaveBackground';
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 const Report = () => {
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="relative pt-24 pb-16">
-        <WaveBackground />
-        
-        <div className="container mx-auto px-4 relative z-10">
-          {/* Page Header */}
-          <div className="max-w-2xl mx-auto text-center mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 animate-slide-up">
-              Report Water Issue
-            </h1>
-            <p className="text-muted-foreground animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              Fill out the form below to report a water leakage, burst pipe, illegal connection, or broken meter in Kericho County.
-            </p>
-          </div>
+  const navigate = useNavigate();
 
-          {/* Form */}
-          <div className="max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <ReportForm />
-          </div>
-        </div>
-      </main>
-    </div>
+  // 🌟 1. State variables
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+
+  //  2. GPS CAPTURE — PLACE IT HERE
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      setLatitude(position.coords.latitude);
+      setLongitude(position.coords.longitude);
+    });
+  }, []);
+
+  //  3. Upload image function
+  const uploadImage = async (file: File | null) => {
+    if (!file) return null;
+
+    const fileName = `${Date.now()}-${file.name}`;
+
+    const { data, error } = await supabase.storage
+      .from("leak-images")
+      .upload(fileName, file);
+
+    if (error) {
+      console.error("Image upload error:", error);
+      return null;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("leak-images").getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
+  //  4. Submit report function
+  const submitReport = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const imageUrl = await uploadImage(selectedFile);
+
+    const { error } = await supabase.from("reports").insert([
+      {
+        name,
+        phone,
+        email,
+        description,
+        image_url: imageUrl,
+        latitude,
+        longitude,
+      },
+    ]);
+
+    if (error) {
+      alert("Error submitting report");
+      console.error(error);
+      return;
+    }
+
+    navigate("/success");
+  };
+
+  return (
+    <form onSubmit={submitReport}>
+      {/* your form inputs go here */}
+    </form>
   );
 };
 
