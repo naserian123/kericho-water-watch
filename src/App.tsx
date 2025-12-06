@@ -7,6 +7,10 @@ import Index from "./pages/Index";
 import Report from "./pages/Report";
 import Success from "./pages/Success";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/AdminDashboard";
+// ...
+<Route path="/admin" element={<AdminDashboard />} />
+
 
 const queryClient = new QueryClient();
 

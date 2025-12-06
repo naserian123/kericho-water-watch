@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 const Report = () => {
   const navigate = useNavigate();
 
-  // 🌟 1. State variables
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -14,7 +13,6 @@ const Report = () => {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
-  //  2. GPS CAPTURE — PLACE IT HERE
   useEffect(() => {
     navigator.geolocation.getCurrentPosition((position) => {
       setLatitude(position.coords.latitude);
@@ -22,7 +20,6 @@ const Report = () => {
     });
   }, []);
 
-  //  3. Upload image function
   const uploadImage = async (file: File | null) => {
     if (!file) return null;
 
@@ -44,7 +41,6 @@ const Report = () => {
     return publicUrl;
   };
 
-  //  4. Submit report function
   const submitReport = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -72,9 +68,104 @@ const Report = () => {
   };
 
   return (
-    <form onSubmit={submitReport}>
-      {/* your form inputs go here */}
-    </form>
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-xl mx-auto bg-card shadow-xl rounded-xl p-6 border border-border">
+        <h2 className="text-2xl font-bold text-foreground mb-6">
+          Report Water Issue
+        </h2>
+
+        <form className="space-y-4" onSubmit={submitReport}>
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Full Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full p-3 rounded-lg border bg-background"
+              placeholder="Enter your name"
+            />
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Phone Number</label>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="w-full p-3 rounded-lg border bg-background"
+              placeholder="0712345678"
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Email Address</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-3 rounded-lg border bg-background"
+              placeholder="example@gmail.com"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Issue Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+              className="w-full p-3 rounded-lg border bg-background min-h-[100px]"
+              placeholder="Describe the water issue..."
+            />
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Upload Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+              required
+              className="w-full text-sm"
+            />
+
+            {selectedFile && (
+              <img
+                src={URL.createObjectURL(selectedFile)}
+                alt="Preview"
+                className="mt-3 rounded-lg max-h-48 border"
+              />
+            )}
+          </div>
+
+          {/* GPS */}
+          <div className="p-3 bg-secondary rounded-lg text-sm">
+            {latitude && longitude ? (
+              <p className="text-success font-semibold">
+                📍 Location Captured: {latitude.toFixed(5)}, {longitude.toFixed(5)}
+              </p>
+            ) : (
+              <p className="text-warning">📍 Capturing GPS location...</p>
+            )}
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            className="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:opacity-90"
+          >
+            Submit Report
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
 
