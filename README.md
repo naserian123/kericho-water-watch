@@ -1,73 +1,159 @@
-# Welcome to your Lovable project
+Kericho Water Watch 🚰🌍
 
-## Project info
+A reporting platform for water-related issues in Kericho County — built with React + TypeScript + Vite + Supabase, featuring a clean UI, analytics dashboard, and an interactive map.
 
-**URL**: https://lovable.dev/projects/bf8c3986-23c7-46c4-92b5-aa61f50319fd
+Live Deployment:
+🔗 https://kericho-water-watch-bcsm.vercel.app/
 
-## How can I edit this code?
+🌟 Overview
 
-There are several ways of editing your application.
+Kericho Water Watch is a web application designed to help citizens report water issues such as pipe bursts, leakages, shortages, and contamination.
+The platform enables:
 
-**Use Lovable**
+📍 Users to submit reports with location data
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bf8c3986-23c7-46c4-92b5-aa61f50319fd) and start prompting.
+🗺️ Interactive map visualization of all reports
 
-Changes made via Lovable will be committed automatically to this repo.
+🧑‍💼 Admin dashboard to review, manage, and filter reports
 
-**Use your preferred IDE**
+📊 Analytics overview (e.g., number of issues, status tracking)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+☁️ Real-time backend powered by Supabase
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The platform is optimized for community usage and scalable deployment on Vercel.
 
-Follow these steps:
+🚀 Features
+User-Facing
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Submit water issue reports
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+View all reports on an interactive map
 
-# Step 3: Install the necessary dependencies.
-npm i
+See issue types & descriptions
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Clean mobile-responsive interface
+
+Admin Dashboard
+
+View all reports in a table
+
+View details via ReportDetails
+
+Filter & manage reports
+
+Export reports (CSV / JSON)
+
+Map and list synchronization
+
+Technical Architecture
+
+Frontend: React + TypeScript + Vite
+
+Backend: Supabase (PostgreSQL + Auth + REST)
+
+Deployment: Vercel
+
+Map Integration: (e.g., Leaflet or similar based on your code)
+
+🛠️ Tech Stack
+Category	Technology Used
+Frontend	React, TypeScript, Vite
+Styling	Tailwind CSS
+Backend	Supabase (DB + API + Auth)
+Deployment	Vercel
+State Mgmt	React Hooks
+Maps	(Your chosen map library used in the code — Leaflet/Mapbox/etc.)
+📁 Project Structure
+src/
+│
+├── components/
+│   ├── ReportDetails.tsx
+│   ├── ReportList.tsx
+│
+├── pages/
+│   ├── Report.tsx
+│   ├── AdminDashboard.tsx
+│
+├── App.tsx
+├── main.tsx
+├── index.css
+│
+└── supabaseClient.ts       // Supabase configuration
+
+🔧 Environment Variables
+
+To run locally or deploy, ensure you add:
+
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+For Vercel Deployment
+
+Go to Project Settings → Environment Variables
+
+Add:
+
+VITE_SUPABASE_URL
+
+VITE_SUPABASE_ANON_KEY
+
+Redeploy project
+
+⚙️ Installation & Setup
+1. Clone repo
+git clone https://github.com/your-username/kericho-water-watch.git
+cd kericho-water-watch
+
+2. Install dependencies
+npm install
+
+3. Setup environment variables
+
+Create .env file:
+
+VITE_SUPABASE_URL=xxxx
+VITE_SUPABASE_ANON_KEY=xxxx
+
+4. Run locally
 npm run dev
-```
 
-**Edit a file directly in GitHub**
+5. Build for production
+npm run build
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+🌐 Deployment
 
-**Use GitHub Codespaces**
+This project is deployed on Vercel.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Steps:
 
-## What technologies are used for this project?
+Push to GitHub
 
-This project is built with:
+Connect repo to Vercel
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Add environment variables
 
-## How can I deploy this project?
+Deploy
 
-Simply open [Lovable](https://lovable.dev/projects/bf8c3986-23c7-46c4-92b5-aa61f50319fd) and click on Share -> Publish.
+Your live site is here:
+👉 https://kericho-water-watch-bcsm.vercel.app/
 
-## Can I connect a custom domain to my Lovable project?
+📝 Known Issues & Fixes
 
-Yes, you can!
+If the deployed site shows blank content:
+✔ Check environment variables in Vercel
+✔ Ensure Supabase CORS allows your Vercel domain
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+If map does not load:
+✔ Confirm API keys and map provider setup
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+If new components don’t show:
+✔ Commit and push updated files (ReportDetails.tsx, ReportList.tsx, AdminDashboard.tsx)
+
+🤝 Contributing
+
+Pull requests are welcome!
+For major changes, please open an issue first to discuss what you'd like to improve.
+
+📄 License
+
+This project is licensed under the MIT License.
