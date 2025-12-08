@@ -25,20 +25,28 @@ const Report = () => {
 
     const fileName = `${Date.now()}-${file.name}`;
 
+    // Upload image to the correct bucket
     const { data, error } = await supabase.storage
-      .from("leak-images")
-      .upload(fileName, file);
+      .from("reports-images") // Make sure this bucket exists
+      .upload(`images/${fileName}`, file);
 
     if (error) {
-      console.error("Image upload error:", error);
+      console.error("Image upload error:", error.message);
       return null;
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("leak-images").getPublicUrl(fileName);
+    // Get the public URL
+    const { data: publicUrlData, error: urlError } = supabase
+      .storage
+      .from("reports-images")
+      .getPublicUrl(`images/${fileName}`);
 
-    return publicUrl;
+    if (urlError) {
+      console.error("Get public URL error:", urlError.message);
+      return null;
+    }
+
+    return publicUrlData.publicUrl;
   };
 
   const submitReport = async (event: React.FormEvent) => {
@@ -75,7 +83,6 @@ const Report = () => {
         </h2>
 
         <form className="space-y-4" onSubmit={submitReport}>
-          {/* Name */}
           <div>
             <label className="block text-sm font-medium mb-1">Full Name</label>
             <input
@@ -88,7 +95,6 @@ const Report = () => {
             />
           </div>
 
-          {/* Phone */}
           <div>
             <label className="block text-sm font-medium mb-1">Phone Number</label>
             <input
@@ -101,7 +107,6 @@ const Report = () => {
             />
           </div>
 
-          {/* Email */}
           <div>
             <label className="block text-sm font-medium mb-1">Email Address</label>
             <input
@@ -113,7 +118,6 @@ const Report = () => {
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium mb-1">Issue Description</label>
             <textarea
@@ -125,7 +129,6 @@ const Report = () => {
             />
           </div>
 
-          {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium mb-1">Upload Image</label>
             <input
@@ -145,7 +148,6 @@ const Report = () => {
             )}
           </div>
 
-          {/* GPS */}
           <div className="p-3 bg-secondary rounded-lg text-sm">
             {latitude && longitude ? (
               <p className="text-success font-semibold">
@@ -156,7 +158,6 @@ const Report = () => {
             )}
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             className="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:opacity-90"
