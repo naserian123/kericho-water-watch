@@ -16,38 +16,78 @@ const defaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = defaultIcon;
 
-// Example report type
 type Report = {
-  id: number;
-  name: string;
-  lat: number;
-  lng: number;
-  description: string;
+  id: string;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  description: string | null;
+  image_url: string | null;
+  image_path?: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  resolved: boolean;
+  created_at: string;
+  report_type?: string | null;
 };
 
-// Sample reports data
-const reports: Report[] = [
-  { id: 1, name: "Leakage at Main Street", lat: -0.367, lng: 35.283, description: "Pipe leakage reported." },
-  { id: 2, name: "Blocked Drain", lat: -0.366, lng: 35.285, description: "Drain blockage causing overflow." },
-];
+interface ReportListProps {
+  reports: Report[];
+  onSelect: (report: Report) => void;
+  onRefresh: () => Promise<void>;
+}
 
-const ReportList: React.FC = () => {
+const ReportList: React.FC<ReportListProps> = ({ reports, onSelect }) => {
+  const validReports = reports.filter(r => r.latitude && r.longitude);
+  const center: [number, number] = validReports.length > 0 
+    ? [validReports[0].latitude!, validReports[0].longitude!] 
+    : [-0.367, 35.283];
+
   return (
-    <div style={{ height: "500px", width: "100%" }}>
-      <MapContainer center={[-0.367, 35.283]} zoom={15} style={{ height: "100%", width: "100%" }}>
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
+    <div className="space-y-4">
+      <div style={{ height: "300px", width: "100%" }} className="rounded-lg overflow-hidden">
+        <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          {validReports.map((report) => (
+            <Marker key={report.id} position={[report.latitude!, report.longitude!]}>
+              <Popup>
+                <strong>{report.name || "Unknown"}</strong>
+                <p>{report.description || "No description"}</p>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+
+      <div className="space-y-2 max-h-96 overflow-y-auto">
         {reports.map((report) => (
-          <Marker key={report.id} position={[report.lat, report.lng]}>
-            <Popup>
-              <strong>{report.name}</strong>
-              <p>{report.description}</p>
-            </Popup>
-          </Marker>
+          <div
+            key={report.id}
+            onClick={() => onSelect(report)}
+            className="p-3 bg-card rounded-lg shadow cursor-pointer hover:bg-accent/10 transition-colors border"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-medium">{report.name || "Unknown"}</p>
+                <p className="text-sm text-muted-foreground">{report.phone}</p>
+              </div>
+              <span className={`px-2 py-1 text-xs rounded ${report.resolved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                {report.resolved ? 'Resolved' : 'Pending'}
+              </span>
+            </div>
+            <p className="text-sm mt-1 line-clamp-2">{report.description}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {new Date(report.created_at).toLocaleDateString()}
+            </p>
+          </div>
         ))}
-      </MapContainer>
+        {reports.length === 0 && (
+          <p className="text-center text-muted-foreground py-4">No reports found</p>
+        )}
+      </div>
     </div>
   );
 };
