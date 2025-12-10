@@ -35,16 +35,11 @@ const Report = () => {
       return null;
     }
 
-    // Get the public URL
-    const { data: publicUrlData, error: urlError } = supabase
+    // Get the public URL (getPublicUrl is synchronous and doesn't return an error)
+    const { data: publicUrlData } = supabase
       .storage
       .from("reports-images")
       .getPublicUrl(`images/${fileName}`);
-
-    if (urlError) {
-      console.error("Get public URL error:", urlError.message);
-      return null;
-    }
 
     return publicUrlData.publicUrl;
   };

@@ -16,38 +16,86 @@ const defaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = defaultIcon;
 
-// Example report type
 type Report = {
-  id: number;
-  name: string;
-  lat: number;
-  lng: number;
-  description: string;
+  id: string;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  description: string | null;
+  image_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  resolved: boolean;
+  created_at: string;
+  report_type?: string | null;
 };
 
-// Sample reports data
-const reports: Report[] = [
-  { id: 1, name: "Leakage at Main Street", lat: -0.367, lng: 35.283, description: "Pipe leakage reported." },
-  { id: 2, name: "Blocked Drain", lat: -0.366, lng: 35.285, description: "Drain blockage causing overflow." },
-];
+interface ReportListProps {
+  reports: Report[];
+  onSelect: (report: Report) => void;
+  onRefresh: () => Promise<void>;
+}
 
-const ReportList: React.FC = () => {
+const ReportList: React.FC<ReportListProps> = ({ reports, onSelect, onRefresh }) => {
+  const validReports = reports.filter(r => r.latitude && r.longitude);
+  const center: [number, number] = validReports.length > 0 
+    ? [validReports[0].latitude!, validReports[0].longitude!] 
+    : [-0.367, 35.283];
+
   return (
-    <div style={{ height: "500px", width: "100%" }}>
-      <MapContainer center={[-0.367, 35.283]} zoom={15} style={{ height: "100%", width: "100%" }}>
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
+    <div className="space-y-4">
+      <div style={{ height: "300px", width: "100%" }} className="rounded-lg overflow-hidden border">
+        <MapContainer center={center} zoom={12} style={{ height: "100%", width: "100%" }}>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          {validReports.map((report) => (
+            <Marker key={report.id} position={[report.latitude!, report.longitude!]}>
+              <Popup>
+                <strong>{report.name || "Unknown"}</strong>
+                <p>{report.description?.slice(0, 100) || "No description"}</p>
+                <button 
+                  onClick={() => onSelect(report)}
+                  className="text-primary underline text-sm"
+                >
+                  View Details
+                </button>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+
+      <div className="space-y-2 max-h-96 overflow-y-auto">
         {reports.map((report) => (
-          <Marker key={report.id} position={[report.lat, report.lng]}>
-            <Popup>
-              <strong>{report.name}</strong>
-              <p>{report.description}</p>
-            </Popup>
-          </Marker>
+          <div 
+            key={report.id} 
+            onClick={() => onSelect(report)}
+            className={`p-3 rounded-lg border cursor-pointer hover:bg-secondary/50 transition-colors ${
+              report.resolved ? 'bg-green-50 border-green-200' : 'bg-card'
+            }`}
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-medium">{report.name || "Unknown"}</p>
+                <p className="text-sm text-muted-foreground">{report.phone}</p>
+              </div>
+              <span className={`text-xs px-2 py-1 rounded ${
+                report.resolved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+              }`}>
+                {report.resolved ? 'Resolved' : 'Pending'}
+              </span>
+            </div>
+            <p className="text-sm mt-1 text-muted-foreground line-clamp-2">
+              {report.description || "No description"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {new Date(report.created_at).toLocaleDateString()}
+            </p>
+          </div>
         ))}
-      </MapContainer>
+      </div>
     </div>
   );
 };
