@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const Report = () => {
   const navigate = useNavigate();
@@ -9,63 +11,96 @@ const Report = () => {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
+  const [issueType, setIssueType] = useState("leaking_pipe");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition((position) => {
-      setLatitude(position.coords.latitude);
-      setLongitude(position.coords.longitude);
-    });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        toast.error("Could not capture location. Please enable GPS.");
+      }
+    );
   }, []);
 
-  const uploadImage = async (file: File | null) => {
-    if (!file) return null;
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-    const fileName = `${Date.now()}-${file.name}`;
-
-    const { data, error } = await supabase.storage
-      .from("leak-images")
+    const { error: uploadError } = await supabase.storage
+      .from("report-images")
       .upload(fileName, file);
 
-    if (error) {
-      console.error("Image upload error:", error);
+    if (uploadError) {
+      console.error("Image upload error:", uploadError);
+      toast.error("Failed to upload image");
       return null;
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("leak-images").getPublicUrl(fileName);
+    const { data } = supabase.storage
+      .from("report-images")
+      .getPublicUrl(fileName);
 
-    return publicUrl;
+    return data.publicUrl;
   };
 
   const submitReport = async (event: React.FormEvent) => {
     event.preventDefault();
+    setIsSubmitting(true);
 
-    const imageUrl = await uploadImage(selectedFile);
+    try {
+      let imageUrl = null;
+      if (selectedFile) {
+        imageUrl = await uploadImage(selectedFile);
+        if (!imageUrl) {
+          setIsSubmitting(false);
+          return;
+        }
+      }
 
-    const { error } = await supabase.from("reports").insert([
-      {
-        name,
-        phone,
-        email,
-        description,
-        image_url: imageUrl,
-        latitude,
-        longitude,
-      },
-    ]);
+      const { error } = await supabase.from("reports").insert([
+        {
+          name,
+          phone,
+          email: email || null,
+          description,
+          issue_type: issueType,
+          image_url: imageUrl,
+          latitude,
+          longitude,
+        },
+      ]);
 
-    if (error) {
-      alert("Error submitting report");
-      console.error(error);
-      return;
+      if (error) {
+        console.error("Submit error:", error);
+        toast.error("Error submitting report");
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.success("Report submitted successfully!");
+      navigate("/success");
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast.error("Something went wrong");
+      setIsSubmitting(false);
     }
-
-    navigate("/success");
   };
+
+  const issueTypes = [
+    { value: "leaking_pipe", label: "Leaking Pipe" },
+    { value: "burst_pipe", label: "Burst Pipe" },
+    { value: "illegal_connection", label: "Illegal Connection" },
+    { value: "broken_meter", label: "Broken Meter" },
+    { value: "other", label: "Other" },
+  ];
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -75,6 +110,23 @@ const Report = () => {
         </h2>
 
         <form className="space-y-4" onSubmit={submitReport}>
+          {/* Issue Type */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Issue Type</label>
+            <select
+              value={issueType}
+              onChange={(e) => setIssueType(e.target.value)}
+              className="w-full p-3 rounded-lg border bg-background"
+              required
+            >
+              {issueTypes.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Name */}
           <div>
             <label className="block text-sm font-medium mb-1">Full Name</label>
@@ -103,7 +155,7 @@ const Report = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium mb-1">Email Address</label>
+            <label className="block text-sm font-medium mb-1">Email Address (optional)</label>
             <input
               type="email"
               value={email}
@@ -131,8 +183,8 @@ const Report = () => {
             <input
               type="file"
               accept="image/*"
+              capture="environment"
               onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              required
               className="w-full text-sm"
             />
 
@@ -148,20 +200,28 @@ const Report = () => {
           {/* GPS */}
           <div className="p-3 bg-secondary rounded-lg text-sm">
             {latitude && longitude ? (
-              <p className="text-success font-semibold">
+              <p className="text-green-600 font-semibold">
                 📍 Location Captured: {latitude.toFixed(5)}, {longitude.toFixed(5)}
               </p>
             ) : (
-              <p className="text-warning">📍 Capturing GPS location...</p>
+              <p className="text-yellow-600">📍 Capturing GPS location...</p>
             )}
           </div>
 
           {/* Submit */}
           <button
             type="submit"
-            className="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:opacity-90"
+            disabled={isSubmitting}
+            className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            Submit Report
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit Report"
+            )}
           </button>
         </form>
       </div>
