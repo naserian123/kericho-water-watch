@@ -34,7 +34,7 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from<Report>("reports")
+        .from("reports")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
